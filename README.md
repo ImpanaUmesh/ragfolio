@@ -1,41 +1,94 @@
-# Ragfolio
+# 🚀 Ragfolio: AI-Powered RAG Portfolio
 
-One project: frontend (React + Vite + Tailwind), backend (FastAPI), and RAG (uv library).
+Ragfolio is a modern, high-performance personal portfolio featuring an integrated AI Chatbot. It uses **RAG (Retrieval-Augmented Generation)** to answer questions about your professional experience using your resume as the primary knowledge source.
 
-## Layout
+---
 
-- **frontend/** — React app; dev server on port 5000; all API calls go to `/api/*` (proxied to backend).
-- **backend/** — FastAPI app on port 8000; `GET /health`, `POST /ask`.
-- **rag/** — uv package (chromadb, fastembed, requests); for use by backend.
+## 🛠️ Tech Stack
+- **Frontend**: React, Vite, Tailwind CSS, Framer Motion.
+- **Backend**: FastAPI (Python), Uvicorn.
+- **AI/RAG**: ChromaDB (Vector Store), FastEmbed (Embeddings), Google Gemini Flash 1.5 (LLM).
+- **Package Management**: `uv` (Python), `npm` (Node.js).
 
-## Run
+---
 
-1. **Backend** (terminal 1):
-   ```bash
-   cd backend && uv run python main.py
-   ```
-   Listens on http://localhost:8000.
+## 📋 Prerequisites
+Before you begin, ensure you have the following installed:
+- [Python 3.12+](https://www.python.org/)
+- [uv](https://github.com/astral-sh/uv) (Extremely fast Python package manager)
+- [Node.js & npm](https://nodejs.org/)
+- A **Google Gemini API Key** (Get it from [Google AI Studio](https://aistudio.google.com/))
 
-2. **Frontend** (terminal 2):
-   ```bash
-   cd frontend && npm install && npm run dev
-   ```
-   App at http://localhost:5000. Requests to `/api/health` and `/api/ask` are proxied to the backend.
-   
+---
 
-Optionally install RAG for development: `cd rag && uv sync`.
+## 💻 Local Development
 
+### 1. Setup Environment Variables
+Create a `.env` file in the **root** of the project:
+```env
+GEMINI_API_KEY=your_api_key_here
+```
 
+Also, ensure `frontend/.env` points to the local backend:
+```env
+VITE_API_BASE_URL=http://localhost:8000/api
+```
 
-## Related Projects
+### 2. Ingest Resume Data
+This converts your `rag/resume.txt` into a searchable vector database.
+```bash
+uv run rag/create-embeddings.py
+```
 
-[git-lrc](https://github.com/HexmosTech/git-lrc): Free, Unlimited AI Code Reviews That Run on Commit.
- 
+### 3. Start Backend (Terminal 1)
+```bash
+cd backend
+uv run python main.py
+```
+*Backend runs at `http://localhost:8000`.*
 
-[![git-lrc](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/vbgm2bg20v4egt4x3p6m.png)](https://hexmos.com/livereview/git-lrc/)
+### 4. Start Frontend (Terminal 2)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+*Frontend runs at `http://localhost:5000` (proxied to port 8000 for `/api` calls).*
 
-*AI agents write code fast. They also silently remove logic, change behavior, and introduce bugs -- without telling you. You often find out in production.
-git-lrc fixes this. It hooks into git commit and reviews every diff before it lands. 60-second setup.*
+---
 
-👉 Check out: [git-lrc](https://github.com/HexmosTech/git-lrc) 
-Any feedback or contributors are welcome! It’s online, source-available, and ready for anyone to use. Star us on GitHub.
+## 🌐 Production Deployment (Render)
+
+This project is optimized for a **Unified Deployment** on Render (serving both Frontend and Backend from a single Python service).
+
+### Step-by-Step Guide:
+
+1. **Push to GitHub**: Ensure all changes are committed and pushed to your repo.
+2. **Create Web Service**: In the [Render Dashboard](https://dashboard.render.com), click **New +** -> **Web Service**.
+3. **Connect Repository**: Select your `ragfolio` repository.
+4. **Configuration**:
+   - **Runtime**: `Python`
+   - **Build Command**: `./render-build.sh`
+   - **Start Command**: `python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
+5. **Advanced / Environment Variables**:
+   - Add `GEMINI_API_KEY`: `(Your actual key)`
+   - Add `PYTHON_VERSION`: `3.12.0`
+6. **Deploy**: Click **Create Web Service**.
+
+### How the Unified Build Works:
+The `./render-build.sh` script automatically:
+1. Builds the React production files into `frontend/dist`.
+2. Installs Python dependencies from `requirements.txt`.
+3. Runs the RAG ingestion script to prepare the database on the server.
+4. The FastAPI backend serves the `dist` folder as static files while maintaining the `/api` endpoints for the chatbot.
+
+---
+
+## 🏗️ Architecture Note
+- **API Prefixing**: All backend routes are prefixed with `/api` to avoid collisions with frontend routes.
+- **SPA Support**: The backend includes a catch-all route that serves `index.html` for any non-API path, allowing React Router to work perfectly in production.
+
+---
+
+## �️ Related Projects
+[git-lrc](https://github.com/HexmosTech/git-lrc): Free, Unlimited AI Code Reviews That Run on Commit. Stop bugs before they land.
